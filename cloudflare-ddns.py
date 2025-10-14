@@ -60,29 +60,50 @@ def getIPs():
     global ipv6_enabled
     global purgeUnknownRecords
     if ipv4_enabled:
-        try:
-            a = requests.get(
-                "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
-            a.pop()
-            a = dict(s.split("=") for s in a)["ip"]
-        except Exception:
-            global shown_ipv4_warning
-            if not shown_ipv4_warning:
-                shown_ipv4_warning = True
-                print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
-            # Try secondary IP check
+        # 国内可用的 IP 查询服务列表
+        ipv4_services = [
+            "https://api.ipify.org?format=text",
+            "https://ifconfig.me",
+            "https://api.ip.sb/ip",
+            "https://myip.ipip.net",
+            "https://ipv4.icanhazip.com"
+        ]
+        for service in ipv4_services:
             try:
-                a = requests.get(
-                    "https://1.0.0.1/cdn-cgi/trace").text.split("\n")
-                a.pop()
-                a = dict(s.split("=") for s in a)["ip"]
+                a = requests.get(service).text.strip()
+                if a is not None:
+                    break
             except Exception:
-                global shown_ipv4_warning_secondary
-                if not shown_ipv4_warning_secondary:
-                    shown_ipv4_warning_secondary = True
-                    print("🧩 IPv4 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
-                if purgeUnknownRecords:
-                    deleteEntries("A")
+                continue
+
+        if not a:
+            print("🧩 IPv4 not detected via any service.")
+            if purgeUnknownRecords:
+                deleteEntries("A")
+
+        # try:
+        #     a = requests.get(
+        #         "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
+        #     a.pop()
+        #     a = dict(s.split("=") for s in a)["ip"]
+        # except Exception:
+        #     global shown_ipv4_warning
+        #     if not shown_ipv4_warning:
+        #         shown_ipv4_warning = True
+        #         print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
+        #     # Try secondary IP check
+        #     try:
+        #         a = requests.get(
+        #             "https://1.0.0.1/cdn-cgi/trace").text.split("\n")
+        #         a.pop()
+        #         a = dict(s.split("=") for s in a)["ip"]
+        #     except Exception:
+        #         global shown_ipv4_warning_secondary
+        #         if not shown_ipv4_warning_secondary:
+        #             shown_ipv4_warning_secondary = True
+        #             print("🧩 IPv4 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
+        #         if purgeUnknownRecords:
+        #             deleteEntries("A")
     if ipv6_enabled:
         try:
             aaaa = requests.get(
