@@ -148,6 +148,9 @@ def getIPs():
                         print("🧩 IPv6 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
                     if purgeUnknownRecords:
                         deleteEntries("AAAA")
+        else:
+            print(f"🧩 IPv6 detected is {aaaa}")
+
     ips = {}
     if (a is not None):
         ips["ipv4"] = {
