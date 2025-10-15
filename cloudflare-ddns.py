@@ -8,6 +8,7 @@
 
 __version__ = "1.0.2"
 
+import ipaddress
 import re
 from string import Template
 
@@ -60,27 +61,48 @@ def getIPs():
     global ipv4_enabled
     global ipv6_enabled
     global purgeUnknownRecords
-    if ipv4_enabled:
-        # 国内可用的 IP 查询服务列表
-        ipv4_services = [
-            "https://api.ipify.org",
-            "https://ifconfig.me",
-            "https://api.ip.sb/ip",
-            "https://myip.ipip.net",
-            "https://ipv4.icanhazip.com"
-        ]
-        for service in ipv4_services:
-            try:
-                resp = requests.get(service).text.strip()
-                match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", resp)
-                if match:
-                    a = match.group(0)
-                    print(f"🧩{service} return IPv4 address is: {a}.")
-                    break
-            except Exception:
-                continue
 
-        if not a:
+    if locale == "CN":
+        if ipv4_enabled:
+            # 国内可用的 IP 查询服务列表
+            ipv4_services = [
+                "https://api.ipify.org",
+                "https://ifconfig.me",
+                "https://v4.ident.me/"
+                "https://api.ip.sb/ip",
+                "https://myip.ipip.net",
+                "https://ipv4.icanhazip.com"
+            ]
+            for service in ipv4_services:
+                try:
+                    resp = requests.get(service).text.strip()
+                    match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", resp)
+                    if match:
+                        a = match.group(0)
+                        print(f"🧩{service} return IPv4 address is: {a}.")
+                        break
+                except Exception:
+                    continue
+
+        if ipv6_enabled:
+            ipv6_services = [
+                "https://api64.ipify.org",
+                "https://ifconfig.co/ip",
+                "https://v6.ident.me/",
+                "https://6.ipw.cn/"
+                "https://ipv6.icanhazip.com"
+            ]
+            for service in ipv6_services:
+                try:
+                    aaaa = requests.get(service).text.strip()
+                    ip_obj = ipaddress.ip_address(aaaa)
+                    if aaaa and ip_obj.version == 6:
+                        print(f"🧩{service} return IPv6 address is: {aaaa}.")
+                        break
+                except Exception:
+                    continue
+    else:
+        if ipv4_enabled:
             try:
                 a = requests.get(
                     "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
@@ -105,27 +127,8 @@ def getIPs():
                     if purgeUnknownRecords:
                         deleteEntries("A")
 
-            print("🧩 IPv4 not detected via any service.")
-            if purgeUnknownRecords:
-                deleteEntries("A")
-        else:
-            print(f"🧩 IPv4 detected is {a}")
 
-    if ipv6_enabled:
-        ipv6_services = [
-            "https://api64.ipify.org",
-            "https://ipv6.icanhazip.com"
-        ]
-        for service in ipv6_services:
-            try:
-                aaaa = requests.get(service).text.strip()
-                if aaaa:
-                    print(f"🧩{service} return IPv6 address is: {aaaa}.")
-                    break
-            except Exception:
-                continue
-
-        if not aaaa:
+        if ipv6_enabled:
             try:
                 aaaa = requests.get(
                     "https://[2606:4700:4700::1111]/cdn-cgi/trace").text.split("\n")
@@ -148,20 +151,20 @@ def getIPs():
                         print("🧩 IPv6 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
                     if purgeUnknownRecords:
                         deleteEntries("AAAA")
-        else:
-            print(f"🧩 IPv6 detected is {aaaa}")
 
     ips = {}
-    if (a is not None):
+    if a is not None:
         ips["ipv4"] = {
             "type": "A",
             "ip": a
         }
-    if (aaaa is not None):
+        print(f"🧩 IPv4 detected is {a}")
+    if aaaa is not None:
         ips["ipv6"] = {
             "type": "AAAA",
             "ip": aaaa
         }
+        print(f"🧩 IPv6 detected is {aaaa}")
     return ips
 
 
@@ -302,6 +305,7 @@ if __name__ == '__main__':
     ipv6_enabled = True
     purgeUnknownRecords = False
 
+
     if sys.version_info < (3, 5):
         raise Exception("🐍 This script requires Python 3.5+")
 
@@ -339,6 +343,10 @@ if __name__ == '__main__':
         if ttl < 30:
             ttl = 1  #
             print("⚙️ TTL is too low - defaulting to 1 (auto)")
+        try:
+            locale = str(config["locale"])
+        except:
+            ttl = "CN"  # default locale CN
         if (len(sys.argv) > 1):
             if (sys.argv[1] == "--repeat"):
                 if ipv4_enabled and ipv6_enabled:
