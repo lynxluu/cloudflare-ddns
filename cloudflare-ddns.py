@@ -61,17 +61,19 @@ def getIPs():
     global ipv4_enabled
     global ipv6_enabled
     global purgeUnknownRecords
+    global locale
 
     if locale == "CN":
         if ipv4_enabled:
             # 国内可用的 IP 查询服务列表
             ipv4_services = [
-                "https://api.ipify.org",
-                "https://ifconfig.me",
-                "https://v4.ident.me/"
-                "https://api.ip.sb/ip",
+                "https://v4.ident.me/",
+                "https://4.ipw.cn/",
                 "https://myip.ipip.net",
-                "https://ipv4.icanhazip.com"
+                # "https://ifconfig.me",
+                # "https://api.ip.sb/ip",
+                # "https://api.ipify.org",
+                # "https://ipv4.icanhazip.com",
             ]
             for service in ipv4_services:
                 try:
@@ -86,11 +88,11 @@ def getIPs():
 
         if ipv6_enabled:
             ipv6_services = [
-                "https://api64.ipify.org",
-                "https://ifconfig.co/ip",
                 "https://v6.ident.me/",
-                "https://6.ipw.cn/"
-                "https://ipv6.icanhazip.com"
+                "https://6.ipw.cn/",
+                "https://ifconfig.co/ip",
+                "https://ipv6.icanhazip.com",
+                # "https://api64.ipify.org",
             ]
             for service in ipv6_services:
                 try:
@@ -304,7 +306,7 @@ if __name__ == '__main__':
     ipv4_enabled = True
     ipv6_enabled = True
     purgeUnknownRecords = False
-
+    locale = ""
 
     if sys.version_info < (3, 5):
         raise Exception("🐍 This script requires Python 3.5+")
@@ -346,9 +348,10 @@ if __name__ == '__main__':
         try:
             locale = str(config["locale"])
         except:
-            ttl = "CN"  # default locale CN
+            locale = "CN"  # default locale CN
         if (len(sys.argv) > 1):
             if (sys.argv[1] == "--repeat"):
+                print(f"Your locale in config.json file is {locale}")
                 if ipv4_enabled and ipv6_enabled:
                     print(
                         "🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every " + str(ttl) + " seconds")
