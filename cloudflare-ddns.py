@@ -97,10 +97,12 @@ def getIPs():
             for service in ipv6_services:
                 try:
                     aaaa = requests.get(service).text.strip()
-                    ip_obj = ipaddress.ip_address(aaaa)
-                    if aaaa and ip_obj.version == 6:
+                    if aaaa:
                         print(f"🧩{service} return IPv6 address is: {aaaa}.")
-                        break
+                        ip_obj = ipaddress.ip_address(aaaa)
+                        if ip_obj.version == 6:
+                            print(f"🧩{aaaa} is a valid IPv6 address.")
+                            break
                 except Exception:
                     continue
     else:
